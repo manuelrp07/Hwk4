@@ -47,12 +47,6 @@ d3.csv("coffee.csv", function(data) {
               .key(function(d){return d.caffeination;})
               .key(function(d){return d.category;})
               .key(function(d){return d.type;})
-              .rollup(function(values) {
-                  console.log(values)
-                  return {
-                    totalProfit: d3.sum(profit),
-                    totalSales: d3.sum(sales)};
-                })
               .entries(data);
   console.log(nest[0]);
 
