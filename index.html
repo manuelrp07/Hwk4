@@ -26,57 +26,71 @@ form {
 
 </style>
 <form>
-  <label><input type="radio" name="mode" value="size" checked> Size</label>
-  <label><input type="radio" name="mode" value="count"> Count</label>
+  <label><input type="radio" name="mode" value="profit" checked> Profit</label>
+  <label><input type="radio" name="mode" value="sales"> Sales</label>
 </form>
-<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="javascripts/d3.js"></script>
 <script>
 
-var margin = {top: 40, right: 10, bottom: 10, left: 10},
-    width = 960 - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom;
+width=750;
+height=800;
 
-var color = d3.scale.category20c();
+var color = d3.scale.category20();
 
-var treemap = d3.layout.treemap()
-    .size([width, height])
+var mySvg= d3.select("body").append("svg")
+      .attr("width", width)
+      .attr("height", height);
+
+d3.csv("coffee.csv", function(data) {
+  var nest=d3.nest()
+              .key(function(d){return "grandpa";})
+              .key(function(d){return d.caffeination;})
+              .key(function(d){return d.category;})
+              .key(function(d){return d.type;})
+              .rollup(function(values) {
+                  console.log(values)
+                  return {
+                    totalProfit: d3.sum(profit),
+                    totalSales: d3.sum(sales)};
+                })
+              .entries(data);
+  console.log(nest[0]);
+
+  var myTreemap= d3.layout.treemap()
+    .size([width,height])
     .sticky(true)
-    .value(function(d) { return d.size; });
+    .value(function(d) {return +d.profit; })  
+    .children(function(d) {return d.values; })  
+    .nodes(nest[0]);
 
-var div = d3.select("body").append("div")
-    .style("position", "relative")
-    .style("width", (width + margin.left + margin.right) + "px")
-    .style("height", (height + margin.top + margin.bottom) + "px")
-    .style("left", margin.left + "px")
-    .style("top", margin.top + "px");
+  console.log(myTreemap[0]);
 
-d3.json("flare.json", function(error, root) {
-  var node = div.datum(root).selectAll(".node")
-      .data(treemap.nodes)
-    .enter().append("div")
-      .attr("class", "node")
-      .call(position)
-      .style("background", function(d) { return d.children ? color(d.name) : null; })
-      .text(function(d) { return d.children ? null : d.name; });
+  mySvg.selectAll("rect")
+    .data(myTreemap)
+    .enter()
+    .append("rect")
+    .attr("x", function(d){return d.x;})
+    .attr("y", function(d){return d.y;})
+    .attr("width", function(d){return d.dx;})
+    .attr("height", function(d){return d.dy;})
+    .attr("fill", function(d){return d.children? null: color(d.parent.key);})
+    .attr("stroke", "white")
+    .append("title").text(function(d){return "Caffeination: "+d.caffeination+"\n"+"Category: "+d.category+"\n"+"Type: "+d.type});
 
   d3.selectAll("input").on("change", function change() {
-    var value = this.value === "count"
-        ? function() { return 1; }
-        : function(d) { return d.size; };
+    var myValue = this.value === "profit"? function(d) { return d.profit; }: function(d) { return d.sales; };
 
-    node
-        .data(treemap.value(value).nodes)
-      .transition()
+      d3.selectAll("rect")
+        .data(myTreemap.value(myValue).nodes)
+        .transition()
         .duration(1500)
-        .call(position);
-  });
-});
+        .attr("x", function(d){return d.x;})
+        .attr("y", function(d){return d.y;})
+        .attr("width", function(d){return d.dx;})
+        .attr("height", function(d){return d.dy;});
+  })
 
-function position() {
-  this.style("left", function(d) { return d.x + "px"; })
-      .style("top", function(d) { return d.y + "px"; })
-      .style("width", function(d) { return Math.max(0, d.dx - 1) + "px"; })
-      .style("height", function(d) { return Math.max(0, d.dy - 1) + "px"; });
-}
+    ;
+});
 
 </script>
