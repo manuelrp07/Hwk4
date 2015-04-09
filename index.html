@@ -1,90 +1,71 @@
 <!DOCTYPE html>
-<meta charset="utf-8">
-<style>
+<html lang="en">
+  <head>
+  <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+    <meta charset="utf-8">
+    <title>Graduate Admission</title>
+    <script src="javascripts/d3.js"></script> 
+  </head>
 
-body {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  margin: auto;
-  position: relative;
-  width: 960px;
-}
+  <body>
+    <h1 style="text-align:center;">A web page to support graduate admission</h1>
+    <h2 style="text-align:center;">IE5900 Data Visualization Hw4</h2>
 
-form {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-}
+    <script>
+      width=900;
+      height=500;
 
-.node {
-  border: solid 1px white;
-  font: 10px sans-serif;
-  line-height: 12px;
-  overflow: hidden;
-  position: absolute;
-  text-indent: 2px;
-}
+      var color = d3.scale.category20();
 
-</style>
-<form>
-  <label><input type="radio" name="mode" value="profit" checked> Profit</label>
-  <label><input type="radio" name="mode" value="sales"> Sales</label>
-</form>
-<script src="javascripts/d3.js"></script>
-<script>
+      var mySvg= d3.select("body").append("svg")
+            .attr("width", width)
+            .attr("height", height);
 
-width=750;
-height=800;
+      d3.csv("coffee.csv", function(data) {
+        var nest=d3.nest()
+                    .key(function(d){return "grandpa";})
+                    .key(function(d){return d.caffeination;})
+                    .key(function(d){return d.category;})
+                    .key(function(d){return d.type;})
+                    .entries(data);
 
-var color = d3.scale.category20();
+        var myTreemap= d3.layout.treemap()
+          .size([width,height])
+          .sticky(true)
+          .value(function(d) {return +d.profit; })  
+          .children(function(d) {return d.values; })  
+          .nodes(nest[0]);
 
-var mySvg= d3.select("body").append("svg")
-      .attr("width", width)
-      .attr("height", height);
+        mySvg.selectAll("rect")
+          .data(myTreemap)
+          .enter()
+          .append("rect")
+          .attr("x", function(d){return d.x;})
+          .attr("y", function(d){return d.y;})
+          .attr("width", function(d){return d.dx;})
+          .attr("height", function(d){return d.dy;})
+          .attr("fill", function(d){return d.children? null: color(d.parent.key);})
+          .attr("stroke", "white")
+          .append("title").text(function(d){return "Caffeination: "+d.caffeination+"\n"+"Category: "+d.category+"\n"+"Type: "+d.type});
 
-d3.csv("coffee.csv", function(data) {
-  var nest=d3.nest()
-              .key(function(d){return "grandpa";})
-              .key(function(d){return d.caffeination;})
-              .key(function(d){return d.category;})
-              .key(function(d){return d.type;})
-              .entries(data);
-  console.log(nest[0]);
+        d3.selectAll("input").on("change", function change() {
+          var myValue = this.value === "profit"? function(d) { return d.profit; }: function(d) { return d.sales; };
 
-  var myTreemap= d3.layout.treemap()
-    .size([width,height])
-    .sticky(true)
-    .value(function(d) {return +d.profit; })  
-    .children(function(d) {return d.values; })  
-    .nodes(nest[0]);
-
-  console.log(myTreemap[0]);
-
-  mySvg.selectAll("rect")
-    .data(myTreemap)
-    .enter()
-    .append("rect")
-    .attr("x", function(d){return d.x;})
-    .attr("y", function(d){return d.y;})
-    .attr("width", function(d){return d.dx;})
-    .attr("height", function(d){return d.dy;})
-    .attr("fill", function(d){return d.children? null: color(d.parent.key);})
-    .attr("stroke", "white")
-    .append("title").text(function(d){return "Caffeination: "+d.caffeination+"\n"+"Category: "+d.category+"\n"+"Type: "+d.type});
-
-  d3.selectAll("input").on("change", function change() {
-    var myValue = this.value === "profit"? function(d) { return d.profit; }: function(d) { return d.sales; };
-
-      d3.selectAll("rect")
-        .data(myTreemap.value(myValue).nodes)
-        .transition()
-        .duration(1500)
-        .attr("x", function(d){return d.x;})
-        .attr("y", function(d){return d.y;})
-        .attr("width", function(d){return d.dx;})
-        .attr("height", function(d){return d.dy;});
-  })
-
-    ;
-});
-
-</script>
+            d3.selectAll("rect")
+              .data(myTreemap.value(myValue).nodes)
+              .transition()
+              .duration(1500)
+              .attr("x", function(d){return d.x;})
+              .attr("y", function(d){return d.y;})
+              .attr("width", function(d){return d.dx;})
+              .attr("height", function(d){return d.dy;});
+        });
+      });
+      
+    </script>
+    <form>
+    <label><input type="radio" name="mode" value="profit" checked> Profit</label>
+     <label><input type="radio" name="mode" value="sales"> Sales</label>
+    </form>
+  </body>
+</html>
