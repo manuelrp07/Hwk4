@@ -8,68 +8,86 @@
   </head>
 
   <body>
-    <h1 style="text-align:center;">A web page to support graduate admission</h1>
+    <h1 style="text-align:center;">Visualization for beverages sales in the US</h1>
     <h2 style="text-align:center;">IE5900 Data Visualization Hw4</h2>
 
     <script>
       width=900;
       height=500;
-      var color = d3.scale.category20();
+      var color = d3.scale.category20b();
+
+      //Create svg
       var mySvg= d3.select("body").append("svg")
             .attr("width", width)
             .attr("height", height);
+
+      //Create treemap layout
+      var myTreemap= d3.layout.treemap()
+        .size([width,height])
+        .sticky(true)
+        .padding(2)
+        .value(function(d) {return +d.values.totProfit; })    
+        .children(function(d) {return d.values; });
+
+      //Read dataser 
       d3.csv("coffee.csv", function(data) {
+        //Nest dataser
         var nest=d3.nest()
-                    .key(function(d){return "grandpa";})
-                    .key(function(d){return d.caffeination;})
-                    .key(function(d){return d.category;})
-                    .key(function(d){return d.type;})
+                    .key(function(d){ return "grandpa";})
+                    .key(function(d){return d.region;})
+                    .key(function(d){return d.state;})
+                    .rollup(function(d){return {totProfit: d3.sum(d,function(d){return d.profit;}), totSales: d3.sum(d, function(d){return d.sales;})}})
                     .entries(data);
 
-        var myTreemap= d3.layout.treemap()
-          .size([width,height])
-          .sticky(true)
-          .value(function(d) {return +d.profit; })  
-          .children(function(d) {return d.values; })  
-          .nodes(nest[0]);
-
+        //Create rectangles
         mySvg.selectAll("rect")
-          .data(myTreemap)
+          .data(myTreemap.nodes(nest[0]))
           .enter()
           .append("rect")
-          .attr("x", function(d){return d.x;})
-          .attr("y", function(d){return d.y;})
-          .attr("width", function(d){return d.dx;})
-          .attr("height", function(d){return d.dy;})
-          .attr("fill", "white")// function(d){return d.children? null: color(d.parent.key);})
-          .attr("stroke", "white")
-          .append("title").text(function(d){return "Caffeination: "+d.caffeination+"\n"+"Category: "+d.category+"\n"+"Type: "+d.type+"\n"+"Date: "+d.date+"\n"+"Profit: "+d.profit+"\n"+"Sales: "+d.sales});
-
-        d3.selectAll("input").on("change", function change() {
-          var myValue = this.value === "profit"? function(d) { return d.profit; }: function(d) { return d.sales; };
-
-          myTreemap= d3.layout.treemap()
-            .size([width,height])
-            .sticky(true)
-            .value(myValue)  
-            .children(function(d) {return d.values; })  
-            .nodes(nest[0]);
-
-          mySvg.selectAll("rect")
-            .data(myTreemap)
-            .transition()
-            .duration(2500)
             .attr("x", function(d){return d.x;})
             .attr("y", function(d){return d.y;})
             .attr("width", function(d){return d.dx;})
             .attr("height", function(d){return d.dy;})
-            .attr("fill", function(d){return d.children? null: color(d.parent.key);});
+            .attr("fill", function(d){return d.children? null: color(d.key);})
+          .append("title").text(function(d){return "State: "+ d.key+"\n"+ "Profit: "+d.values.totProfit+"\n"+"Sales: "+d.values.totSales})
+        
+        //Create text
+        mySvg.selectAll("#Values")
+          .data(myTreemap.nodes(nest[0]))
+          .enter()
+          .append("text")
+            .attr("x", function(d){return d.x+5;})
+            .attr("y", function(d){return d.y+20;})
+            .attr("fill", "black")
+            .attr("style","font-size:20px")
+            .text(function(d){return d.children? null: d.key;});
+
+        //Update teemap when clicking checkcircles
+        d3.selectAll("input").on("change", function change() {
+          var myValue = this.value === "profit"? function(d) { return d.values.totProfit; }: function(d) { return d.values.totSales; };
+          
+          //Update rectangles
+          mySvg.selectAll("rect")
+            .data(myTreemap.value(myValue))
+            .transition()
+            .duration(500)
+            .attr("x", function(d){return d.x;})
+            .attr("y", function(d){return d.y;})
+            .attr("width", function(d){return d.dx;})
+            .attr("height", function(d){return d.dy;});
+          //Update text
+          mySvg.selectAll("text")
+            .data(myTreemap.value(myValue))
+            .transition()
+            .duration(500)
+            .attr("x", function(d){return d.x+5;})
+            .attr("y", function(d){return d.y+20;});
         });
       });
       
     </script>
     <form>
-      <label><input type="radio" name="mode" value="profit"> Profit</label>
+      <label><input type="radio" name="mode" value="profit" checked> Profit</label>
       <label><input type="radio" name="mode" value="sales"> Sales</label>
     </form>
   </body>
