@@ -13,3 +13,17 @@ form {
   right: 10px;
   top: 10px;
 }
+div{
+	width:70%;
+	padding: 20px;	
+	margin:auto;
+}
+p{
+	text-align: justify;
+}
+div::first-letter{
+	font-size:400%;
+}
+rect:hover {
+	fill: cyan;
+}
