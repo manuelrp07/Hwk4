@@ -9,7 +9,8 @@
 
   <body>
     <h1 style="text-align:center;">Visualization for beverages sales in the US</h1>
-    <h2 style="text-align:center;">IE5900 Data Visualization Hw4</h2>
+    <h2 style="text-align:center;">IE5900 Data Visualization Hw4 - Spring 2015</h2>
+    <h3 style="text-align:center;">Manuel Ramirez</h2>
 
     <script>
       width=900;
@@ -25,12 +26,12 @@
       var myTreemap= d3.layout.treemap()
         .size([width,height])
         .sticky(true)
-        .padding(1)
+        .padding(0)
         .value(function(d) {return +d.values.totProfit; })    
         .children(function(d) {return d.values; });
 
       //Read dataser 
-      d3.csv("coffee.csv", function(data) {
+      d3.csv("https://hivelab.org/static/coffee.csv", function(data) {
         //Nest dataser
         var nest=d3.nest()
                     .key(function(d){ return "grandpa";})
@@ -51,7 +52,7 @@
             .attr("height", function(d){return d.dy;})
             .attr("stroke",function(d){return !d.children? "white": d.children[0].children? "black": null;})
             .attr("fill", function(d){return d.children? "white": color(d.parent.value);})
-            .append("title").text(function(d){return "State: "+ d.key+"\n"+ "Profit: "+d.values.totProfit+"\n"+"Sales: "+d.values.totSales})
+            .append("title").text(function(d){return "Category: "+ d.key+"\n"+ "Profit: "+d.values.totProfit+"\n"+"Sales: "+d.values.totSales})
 
         //Create text
         mySvg.selectAll("#Values")
@@ -93,5 +94,15 @@
       <label><input type="radio" name="mode" value="profit" checked> Profit</label>
       <label><input type="radio" name="mode" value="sales"> Sales</label>
     </form>
+
+    <div>
+      <p>The previous visualizations provides an organized way to perceive profit and sales of diferent categories of hot beverages in the United States.</p>
+      <p>The treemap above displays tthe states in an organized manner: the central states are grouped at the upper right corner, the eastern states at the upper left corner, the western states at the lower right corner and the southern states at the lower left corenr.</p>
+      <p>Each State is also divided according to the category of the beverage, whose names can be displayed by hovering over the boxes. The categories are Tea, Espresso, Herbal Tea and Coffee.</p>
+      <p>Finally, by clicking on the checkcircles below the visualization, the boxes would represent either the total profit or sales of each category in each state.</p>
+    </div>
+
+
+    
   </body>
 </html>
